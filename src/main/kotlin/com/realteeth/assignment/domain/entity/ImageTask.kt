@@ -32,6 +32,9 @@ class ImageTask(
     @Column(nullable = false, length = 2048)
     val imageUrl: String,
 
+    @Column(nullable = false, unique = true, length = 64)
+    val idempotencyKey: String,
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     var status: TaskStatus = TaskStatus.PENDING,
