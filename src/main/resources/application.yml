@@ -1,3 +1,31 @@
 spring:
   application:
     name: assignment
+  datasource:
+    url:
+    username: sa
+    password:
+    driver-class-name: com.mysql.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 8080
+
+mock-worker:
+  base-url:
+  api-key: mock_b64d77a3625b4dd099387479769f557e
+
+logging:
+  level:
+    root: info
+    com.realteeth.assignment: DEBUG
