@@ -70,7 +70,7 @@ class ImageTask(
     }
 
     fun markAsProcessing(mockJobId: String) {
-        transitionTo(TaskStatus.PENDING)
+        transitionTo(TaskStatus.PROCESSING)
         this.mockJobId = mockJobId
     }
 
