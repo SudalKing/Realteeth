@@ -46,7 +46,7 @@ class Outbox(
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
     @Column
-    var proccessedAt: LocalDateTime? = null,
+    var processedAt: LocalDateTime? = null,
 ) {
     companion object {
         const val MAX_RETRY_COUNT = 5
@@ -65,12 +65,12 @@ class Outbox(
 
     fun markAsProcessed() {
         status = OutboxStatus.PROCESSED
-        proccessedAt = LocalDateTime.now()
+        processedAt = LocalDateTime.now()
     }
 
     fun markAsFailed() {
         status = OutboxStatus.FAILED
-        proccessedAt = LocalDateTime.now()
+        processedAt = LocalDateTime.now()
     }
 
     fun incrementRetryCount(): Boolean {
