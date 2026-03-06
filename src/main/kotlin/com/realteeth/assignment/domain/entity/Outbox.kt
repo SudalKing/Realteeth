@@ -50,6 +50,7 @@ class Outbox(
 ) {
     companion object {
         const val MAX_RETRY_COUNT = 5
+        const val RETRY_INTERVAL_SECOND = 30L
 
         fun createTaskCreatedEvent(taskId: String,
                                    payload: String
