@@ -20,6 +20,12 @@ class OutboxProcessor(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * Outbox Event 처리
+     * - Mock Worker에 작업 요청
+     * - 성공: 작업 상태 변경(PENDING -> PROCESSING)
+     * - 실패: 재시도 횟수 증가 -> 최대 재시도 횟수 초과 시 실패 처리(PENDING -> FAILED)
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun processOutboxEvent(outboxId: Long) {
         val outbox = outboxRepository.findById(outboxId).orElse(null) ?: run {
