@@ -22,7 +22,7 @@ server:
   port: 8080
 
 mock-worker:
-  base-url:
+  base-url: https://dev.realteeth.ai/mock
   api-key: mock_b64d77a3625b4dd099387479769f557e
 
 logging:
