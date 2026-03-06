@@ -31,7 +31,7 @@ class ImageTaskServiceImpl(
         if (existingTask.isPresent) {
             val returnTask = existingTask.get()
 
-            log.info("[ImageTask] behavior: 작업 요청 | SUCCESS | idempotencyKey: ${request.idempotencyKey} | taskId: ${returnTask.taskId} | message: 작업 중복 요청, 기존 작업 반환")
+            log.info("[ImageTask] behavior: 작업 요청 | NONE | idempotencyKey: ${request.idempotencyKey} | taskId: ${returnTask.taskId} | message: 작업 중복 요청, 기존 작업 반환")
 
             return CreateTaskResponse(
                 taskId = returnTask.taskId,
