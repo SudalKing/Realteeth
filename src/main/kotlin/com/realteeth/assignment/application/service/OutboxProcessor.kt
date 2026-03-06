@@ -29,18 +29,18 @@ class OutboxProcessor(
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun processOutboxEvent(outboxId: Long) {
         val outbox = outboxRepository.findById(outboxId).orElse(null) ?: run {
-            log.warn("[Outbox] behavior: Outbox Event 처리 | NONE | outboxId: $outboxId | message: 조회되는 Outbox가 없습니다.")
+            log.warn("[Outbox] behavior: Outbox Event 처리 | NONE | outboxId: $outboxId | message: 조회되는 Outbox가 없음")
             return
         }
 
         if (outbox.status != OutboxStatus.PENDING) {
-            log.debug("[Outbox] behavior: Outbox Event 처리 | NONE | outboxId: {} | status: {} | message: 이미 처리되었습니다.", outboxId, outbox.status)
+            log.debug("[Outbox] behavior: Outbox Event 처리 | NONE | outboxId: {} | status: {} | message: 처리가 완료된 Outbox", outboxId, outbox.status)
             return
         }
 
         try {
             val payload = objectMapper.readValue(outbox.payload, TaskCreatedPayload::class.java)
-            log.info("[Outbox] behavior: Outbox Event 처리 | SUCCESS | outboxId: $outboxId | taskId: ${payload.taskId} | message: Outbox 처리를 요청합니다.")
+            log.info("[Outbox] behavior: Outbox Event 처리 | SUCCESS | outboxId: $outboxId | taskId: ${payload.taskId} | message: Outbox Event 처리 요청")
 
             val result = mockWorkerClient.submitJob(payload.imageUrl)
 
@@ -49,14 +49,14 @@ class OutboxProcessor(
                     imageTaskService.updateTaskToProcessing(payload.taskId, response.jobId)
                     outbox.markAsProcessed()
                     outboxRepository.save(outbox)
-                    log.info("[Outbox] behavior: Outbox Event 처리 | SUCCESS | outboxId: $outboxId | jobId: ${response.jobId} | status: ${response.status} | message: Outbox Event가 성공적으로 처리되었습니다.")
+                    log.info("[Outbox] behavior: Outbox Event 처리 | SUCCESS | outboxId: $outboxId | jobId: ${response.jobId} | status: ${response.status} | message: Outbox Event 처리 완료")
                 },
                 onFailure = { e ->
                     handleOutboxFailure(outbox, e.message ?: "알 수 없는 에러입니다.")
                 }
             )
         } catch (e: Exception) {
-            log.error("[Outbox] behavior: Outbox Event 처리 | FAIL | outboxId: $outboxId | message: Outbox Event 처리 중 에러가 발생했습니다.")
+            log.error("[Outbox] behavior: Outbox Event 처리 | FAIL | outboxId: $outboxId | message: Outbox Event 처리 실패")
             handleOutboxFailure(outbox, e.message ?: "알 수 없는 에러입니다.")
         }
     }
