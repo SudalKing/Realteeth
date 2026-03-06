@@ -1,5 +1,6 @@
 package com.realteeth.assignment.infrastructure.scheduler
 
+import com.realteeth.assignment.application.service.JobStatusPoller
 import com.realteeth.assignment.application.service.OutboxProcessor
 import com.realteeth.assignment.domain.entity.Outbox
 import com.realteeth.assignment.domain.entity.OutboxStatus
@@ -90,6 +91,27 @@ class StuckRecoveryScheduler(
             }
         } catch (e: Exception) {
             log.error("[Outbox] behavior: Stuck Outbox Event 복구 배치 | FAIL | message: Stuck Outbox Event 복구 배치 실패", e)
+        }
+    }
+}
+
+@Component
+class JobPollingScheduler(
+    private val jobStatusPoller: JobStatusPoller
+) {
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    /**
+     * 5초마다 PROCESSING 상태인 작업의 상태 폴링
+     */
+    @Scheduled(fixedDelay = 5_000, initialDelay = 5_000)
+    fun pollingJobStatus() {
+        log.debug("[ImageTask] behavior: 처리 중인 작업 조회 | START | message: 처리 중인 작업 조회 시작")
+
+        try {
+            jobStatusPoller.pollAllProcessingJobs()
+        } catch (e: Exception) {
+            log.error("[ImageTask] behavior: 처리 중인 작업 조회 | FAIL | message: 처리 중인 작업 조회 실패", e)
         }
     }
 }
