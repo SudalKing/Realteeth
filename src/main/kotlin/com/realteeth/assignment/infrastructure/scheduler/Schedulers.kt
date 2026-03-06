@@ -59,4 +59,37 @@ class StuckRecoveryScheduler(
     private val outboxProcessor: OutboxProcessor
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
+
+    /**
+     * 1분마다 PENDING 상태에서 오래 멈춘 작업 복구
+     * - Outbox Event 누락 혹은 처리 실패한 경우
+     */
+    @Scheduled(fixedDelay = 60_000, initialDelay = 30_000)
+    fun recoverStuckTasks() {
+        log.debug("[Outbox] behavior: Stuck Outbox Event 복구 배치 | START | message: Stuck Outbox Event 복구 배치 시작")
+
+        try {
+            val stuckTasks = imageTaskRepository.findStuckTasks(
+                status = TaskStatus.PENDING,
+                before = LocalDateTime.now().minusMinutes(2),
+                maxRetryCount = 3
+            )
+
+            if (stuckTasks.isNotEmpty()) {
+                log.info("[Outbox] behavior: Stuck Outbox Event 복구 배치 | START | message: Stuck Outbox Event 복구 대상 ${stuckTasks.size}건")
+
+                stuckTasks.forEach { task ->
+                    val outboxList = outboxRepository.findByAggregateId(task.taskId)
+                    val pendingOutbox = outboxList.firstOrNull{ it.status == OutboxStatus.PENDING }
+
+                    pendingOutbox?.let {
+                        log.info("[Outbox] behavior: Stuck Outbox Event 복구 배치 | PROCESSING | taskId: ${task.taskId} | message: Stuck Outbox Event 재시도")
+                        outboxProcessor.processOutboxEvent(it.id)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            log.error("[Outbox] behavior: Stuck Outbox Event 복구 배치 | FAIL | message: Stuck Outbox Event 복구 배치 실패", e)
+        }
+    }
 }
