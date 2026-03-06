@@ -3,6 +3,7 @@ package com.realteeth.assignment.infrastructure.scheduler
 import com.realteeth.assignment.application.service.OutboxProcessor
 import com.realteeth.assignment.domain.entity.Outbox
 import com.realteeth.assignment.domain.entity.OutboxStatus
+import com.realteeth.assignment.domain.entity.TaskStatus
 import com.realteeth.assignment.domain.repository.ImageTaskRepository
 import com.realteeth.assignment.domain.repository.OutboxRepository
 import org.slf4j.LoggerFactory
@@ -34,9 +35,11 @@ class OutboxScheduler(
             )
 
             if (stuckEvents.isNotEmpty()) {
-                log.info("Found ${stuckEvents.size} stuck events")
+                log.info("[Outbox] behavior: Outbox Event 처리 배치 | START | message: Outbox Event 처리 대상 ${stuckEvents.size}건")
+
                 stuckEvents.forEach { outbox ->
                     try {
+                        log.info("[Outbox] behavior: Outbox Event 처리 배치 | PROCESSING | outboxId: ${outbox.id} | message: Outbox Event ")
                         outboxProcessor.processOutboxEvent(outbox.id)
                     } catch (e: Exception) {
                         log.error("[Outbox] behavior: Outbox Event 처리 배치 | FAIL | outboxId: ${outbox.id} | message: Outbox Event 처리 실패", e)
