@@ -20,11 +20,7 @@ import org.mockito.ArgumentCaptor
 import org.mockito.Captor
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.any
-import org.mockito.kotlin.argThat
-import org.mockito.kotlin.never
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.*
 import org.springframework.context.ApplicationEventPublisher
 import java.util.*
 
@@ -303,6 +299,79 @@ class ImageTaskServiceTest {
             assertThatThrownBy { imageTaskService.completeTask(taskId, result) }
                 .isInstanceOf(ImageTaskServiceImpl.TaskNotFoundException::class.java)
                 .hasMessageContaining(taskId)
+        }
+    }
+
+    @Nested
+    @DisplayName("failTask")
+    inner class FailTask {
+
+        @Test
+        @DisplayName("작업 상태를 변경한다.(PENDING/PROCESSING -> FAILED")
+        fun shouldUpdateToFailed_when_TaskIsInPendingOrProcessing() {
+            // given
+            val taskId = "test-task-id"
+            val errorMessage = "작업 실패"
+            val task = ImageTask(
+                taskId = taskId,
+                imageUrl = "https://example.com/image.jpg",
+                idempotencyKey = "key-123",
+                status = TaskStatus.PENDING // PENDING or PROCESSING
+            )
+
+            whenever(imageTaskRepository.findByTaskIdWithLock(taskId))
+                .thenReturn(Optional.of(task))
+            whenever(imageTaskRepository.save(any<ImageTask>()))
+                .thenAnswer { it.arguments[0] }
+
+            // when
+            imageTaskService.failTask(taskId, errorMessage)
+
+            // then
+            verify(imageTaskRepository).save(taskCaptor.capture())
+            val updatedTask = taskCaptor.value
+            assertThat(updatedTask.taskId).isEqualTo(taskId)
+            assertThat(updatedTask.status).isEqualTo(TaskStatus.FAILED)
+            assertThat(updatedTask.errorMessage).isEqualTo(errorMessage)
+        }
+
+        @Test
+        @DisplayName("PENDING/PROCESSING이 아닌 작업은 상태를 변경하지 않는다.")
+        fun shouldNotUpdate_when_TaskIsNotInPendingOrProcessing() {
+            // given
+            val taskId = "test-task-id"
+            val errorMessage = "작업 실패"
+            val task = ImageTask(
+                taskId = taskId,
+                imageUrl = "https://example.com/image.jpg",
+                idempotencyKey = "key-123",
+                status = TaskStatus.COMPLETED
+            )
+
+            whenever(imageTaskRepository.findByTaskIdWithLock(taskId))
+                .thenReturn(Optional.of(task))
+
+            // when
+            imageTaskService.failTask(taskId, errorMessage)
+
+            // then
+            verify(imageTaskRepository, never()).save(any<ImageTask>())
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 작업 상태를 변경하려할 시 TaskNotFoundException 예외를 던진다.")
+        fun shouldThrowException_when_TaskNotFound() {
+            // given
+            val taskId = "test-task-id"
+            val errorMessage = "작업 실패"
+
+            whenever(imageTaskRepository.findByTaskIdWithLock(taskId))
+                .thenReturn(Optional.empty())
+
+            // when & then
+            assertThatThrownBy { imageTaskService.failTask(taskId, errorMessage) }
+                .isInstanceOf(ImageTaskServiceImpl.TaskNotFoundException::class.java)
+                .hasMessageContaining("작업을 찾을 수 없습니다")
         }
     }
 }
