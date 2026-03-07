@@ -232,4 +232,77 @@ class ImageTaskServiceTest {
             verify(imageTaskRepository, never()).save(any<ImageTask>())
         }
     }
+
+    @Nested
+    @DisplayName("completeTask")
+    inner class CompleteTask {
+
+        @Test
+        @DisplayName("작업 상태를 변경한다.(PROCESSING -> COMPLETED)")
+        fun shouldUpdateToCompleted_when_TaskIsProcessing() {
+            // given
+            val taskId = "test-task-id"
+            val result = "처리 완료"
+            val task = ImageTask(
+                taskId = taskId,
+                imageUrl = "https://example.com/image.jpg",
+                idempotencyKey = "key-123",
+                status = TaskStatus.PROCESSING
+            )
+
+            whenever(imageTaskRepository.findByTaskIdWithLock(taskId))
+                .thenReturn(Optional.of(task))
+            whenever(imageTaskRepository.save(any<ImageTask>()))
+                .thenAnswer { it.arguments[0] }
+
+            // when
+            imageTaskService.completeTask(taskId, result)
+
+            // then
+            verify(imageTaskRepository).save(taskCaptor.capture())
+            val updatedTask = taskCaptor.value
+            assertThat(updatedTask.taskId).isEqualTo(taskId)
+            assertThat(updatedTask.status).isEqualTo(TaskStatus.COMPLETED)
+            assertThat(updatedTask.result).isEqualTo(result)
+        }
+
+        @Test
+        @DisplayName("PROCESSING이 아닌 작업은 상태를 변경하지 않는다.")
+        fun shouldNotUpdate_when_TaskIsNotProcessing() {
+            // given
+            val taskId = "test-task-id"
+            val result = "NONE"
+            val task = ImageTask(
+                taskId = taskId,
+                imageUrl = "https://example.com/image.jpg",
+                idempotencyKey = "key-123",
+                status = TaskStatus.PENDING
+            )
+
+            whenever(imageTaskRepository.findByTaskIdWithLock(taskId))
+                .thenReturn(Optional.of(task))
+
+            // when
+            imageTaskService.completeTask(taskId, result)
+
+            // then
+            verify(imageTaskRepository, never()).save(any<ImageTask>())
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 작업 상태를 변경하려할 시 TaskNotFoundException 예외를 던진다.")
+        fun shouldThrowException_when_TaskNotFound() {
+            // given
+            val taskId = "none-existing-task-id"
+            val result = "FAIL"
+
+            whenever(imageTaskRepository.findByTaskIdWithLock(taskId))
+                .thenReturn(Optional.empty())
+
+            // when & then
+            assertThatThrownBy { imageTaskService.completeTask(taskId, result) }
+                .isInstanceOf(ImageTaskServiceImpl.TaskNotFoundException::class.java)
+                .hasMessageContaining(taskId)
+        }
+    }
 }
