@@ -21,6 +21,7 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argThat
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.context.ApplicationEventPublisher
@@ -57,7 +58,7 @@ class ImageTaskServiceTest {
     }
 
     @Nested
-    @DisplayName("CreateTask 메서드")
+    @DisplayName("createImageTask 메서드")
     inner class CreateTask {
 
         @Test
@@ -95,6 +96,36 @@ class ImageTaskServiceTest {
             })
         }
 
+        @Test
+        @DisplayName("중복된 idempotencyKey로 요청 시 기존 작업을 반환한다.")
+        fun shouldReturnExistingTask_when_IdempotencyKeyIsDuplicate() {
+            // given
+            val request = CreateTaskRequest(
+                imageUrl = "https://example.com/image.jpg",
+                idempotencyKey = "duplicate-key"
+            )
+
+            val existingTask = ImageTask(
+                taskId = "existing-task-id",
+                imageUrl = request.imageUrl,
+                idempotencyKey = request.idempotencyKey,
+                status = TaskStatus.PROCESSING
+            )
+
+            whenever(imageTaskRepository.findByIdempotencyKey(request.idempotencyKey))
+                .thenReturn(Optional.of(existingTask))
+
+            // when
+            val response = imageTaskService.createImageTask(request)
+
+            // then
+            assertThat(response.taskId).isEqualTo("existing-task-id")
+            assertThat(response.status).isEqualTo(TaskStatus.PROCESSING)
+            assertThat(response.message).isEqualTo("작업이 중복 요청되어 기존 작업을 반환합니다.")
+
+            verify(imageTaskRepository, never()).save(any<ImageTask>())
+            verify(outboxRepository, never()).save(any<Outbox>())
+        }
     }
 
 }
