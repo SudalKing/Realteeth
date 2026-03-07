@@ -176,4 +176,60 @@ class ImageTaskServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("updateTaskToProcessing")
+    inner class UpdateTaskToProcessing {
+
+        @Test
+        @DisplayName("작업 상태를 변경한다.(PENDING -> PROCESSING)")
+        fun shouldUpdateToProcessing_when_TaskIsPending() {
+            // given
+            val taskId = "test-task-id"
+            val mockJobId = "mock-job-id"
+            val task = ImageTask(
+                taskId = taskId,
+                imageUrl = "https://example.com/image.jpg",
+                idempotencyKey = "key-123",
+                status = TaskStatus.PENDING
+            )
+
+            whenever(imageTaskRepository.findByTaskIdWithLock(taskId))
+                .thenReturn(Optional.of(task))
+            whenever(imageTaskRepository.save(any<ImageTask>()))
+                .thenAnswer { it.arguments[0] }
+
+            // when
+            imageTaskService.updateTaskToProcessing(taskId, mockJobId)
+
+            // then
+            verify(imageTaskRepository).save(taskCaptor.capture())
+            val updatedTask = taskCaptor.value
+            assertThat(updatedTask.taskId).isEqualTo(taskId)
+            assertThat(updatedTask.status).isEqualTo(TaskStatus.PROCESSING)
+            assertThat(updatedTask.mockJobId).isEqualTo(mockJobId)
+        }
+
+        @Test
+        @DisplayName("PENDING이 아닌 작업은 상태를 변경하지 않는다.")
+        fun shouldNotUpdate_when_TaskIsNotPending() {
+            // given
+            val taskId = "test-task-id"
+            val mockJobId = "mock-job-id"
+            val task = ImageTask(
+                taskId = taskId,
+                imageUrl = "https://example.com/image.jpg",
+                idempotencyKey = "key-123",
+                status = TaskStatus.PROCESSING
+            )
+
+            whenever(imageTaskRepository.findByTaskIdWithLock(taskId))
+                .thenReturn(Optional.of(task))
+
+            // when
+            imageTaskService.updateTaskToProcessing(taskId, mockJobId)
+
+            // then
+            verify(imageTaskRepository, never()).save(any<ImageTask>())
+        }
+    }
 }
