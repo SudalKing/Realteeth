@@ -104,7 +104,7 @@ class ImageTaskServiceImpl(
             imageTaskRepository.save(task)
             log.info("[ImageTask] behavior: 작업 상태 변경 | SUCCESS | taskId: $taskId | mockJobId: $mockJobId | message: 작업 상태 변경 (PENDING -> PROCESSING)")
         } else {
-            log.warn("[ImageTask] behavior: 작업 상태 변경 | FAIL | taskId: $taskId | status: ${task.status} | mockJobId: $mockJobId | message: PENDING 상태가 아닙니다.")
+            log.warn("[ImageTask] behavior: 작업 상태 변경 | NONE | taskId: $taskId | status: ${task.status} | mockJobId: $mockJobId | message: PENDING 상태가 아닙니다.")
         }
     }
 
@@ -118,7 +118,7 @@ class ImageTaskServiceImpl(
             imageTaskRepository.save(task)
             log.info("[ImageTask] behavior: 작업 상태 변경 | SUCCESS | taskId: $taskId | result: $result | message: 작업 상태 변경 (PROCESSING -> COMPLETED)")
         } else {
-            log.warn("[ImageTask] behavior: 작업 상태 변경 | FAIL | taskId: $taskId | status: ${task.status} | result: $result | message: PROCESSING 상태가 아닙니다.")
+            log.warn("[ImageTask] behavior: 작업 상태 변경 | NONE | taskId: $taskId | status: ${task.status} | result: $result | message: PROCESSING 상태가 아닙니다.")
         }
     }
 
@@ -131,9 +131,9 @@ class ImageTaskServiceImpl(
             val prevStatus = task.status
             task.markAsFailed(errorMessage)
             imageTaskRepository.save(task)
-            log.info("[ImageTask] behavior: 작업 상태 변경 | SUCCESS | taskId: $taskId | errorMessage: $errorMessage | message: 작업 상태 변경 ($prevStatus -> COMPLETED)")
+            log.info("[ImageTask] behavior: 작업 상태 변경 | SUCCESS | taskId: $taskId | errorMessage: $errorMessage | message: 작업 상태 변경 ($prevStatus -> FAILED)")
         } else {
-            log.warn("[ImageTask] behavior: 작업 상태 변경 | FAIL | taskId: $taskId | errorMessage: $errorMessage | message: 이미 ${task.status} 상태입니다.")
+            log.warn("[ImageTask] behavior: 작업 상태 변경 | NONE | taskId: $taskId | errorMessage: $errorMessage | message: 이미 ${task.status} 상태입니다.")
         }
     }
 
