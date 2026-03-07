@@ -10,6 +10,7 @@ import com.realteeth.assignment.domain.event.TaskCreatedEvent
 import com.realteeth.assignment.domain.repository.ImageTaskRepository
 import com.realteeth.assignment.domain.repository.OutboxRepository
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -58,7 +59,7 @@ class ImageTaskServiceTest {
     }
 
     @Nested
-    @DisplayName("createImageTask 메서드")
+    @DisplayName("createImageTask")
     inner class CreateTask {
 
         @Test
@@ -125,6 +126,53 @@ class ImageTaskServiceTest {
 
             verify(imageTaskRepository, never()).save(any<ImageTask>())
             verify(outboxRepository, never()).save(any<Outbox>())
+        }
+    }
+
+    @Nested
+    @DisplayName("getTask")
+    inner class GetTask {
+
+        @Test
+        @DisplayName("존재하는 작업 조회 시 응답을 반환한다.")
+        fun shouldReturnResponse_when_TaskExists() {
+            // given
+            val taskId = "test-task-id"
+            val task = ImageTask(
+                taskId = taskId,
+                imageUrl = "https://example.com/image.jpg",
+                idempotencyKey = "test-key-123",
+                status = TaskStatus.COMPLETED,
+                result = "작업 완료"
+            )
+
+            whenever(imageTaskRepository.findByTaskId(taskId))
+                .thenReturn(Optional.of(task))
+
+            // when
+            val response = imageTaskService.getTask(taskId)
+
+            // then
+            assertThat(response.taskId).isEqualTo(taskId)
+            assertThat(response.status).isEqualTo(TaskStatus.COMPLETED)
+            assertThat(response.result).isEqualTo(task.result)
+            assertThat(response.createdAt).isEqualTo(task.createdAt)
+        }
+
+
+        @Test
+        @DisplayName("존재하지 않는 작업 조회 시 TaskNotFoundException을 던진다")
+        fun shouldThrowException_when_TaskNotFound() {
+            // given
+            val taskId = "none-existing-task-id"
+
+            whenever(imageTaskRepository.findByTaskId(taskId))
+                .thenReturn(Optional.empty())
+
+            // when & then
+            assertThatThrownBy { imageTaskService.getTask(taskId) }
+                .isInstanceOf(ImageTaskServiceImpl.TaskNotFoundException::class.java)
+                .hasMessageContaining(taskId)
         }
     }
 
