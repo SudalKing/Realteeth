@@ -5,7 +5,6 @@ import com.realteeth.assignment.domain.entity.ImageTask
 import com.realteeth.assignment.domain.entity.TaskStatus
 import com.realteeth.assignment.domain.repository.ImageTaskRepository
 import com.realteeth.assignment.infrastructure.client.MockWorkerClient
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -13,11 +12,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.never
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.*
 
 @ExtendWith(MockitoExtension::class)
 @DisplayName("JobStatusPoller 테스트")
