@@ -374,4 +374,60 @@ class ImageTaskServiceTest {
                 .hasMessageContaining("작업을 찾을 수 없습니다")
         }
     }
+
+    @Nested
+    @DisplayName("incrementRetryAndCheck")
+    inner class IncrementRetryAndCheck {
+
+        @Test
+        @DisplayName("재시도 횟수를 증가시키고 재시도 가능 여부를 반환한다.")
+        fun shouldIncrementRetryCount() {
+            // given
+            val taskId = "test-task-id"
+            val task = ImageTask(
+                taskId = taskId,
+                imageUrl = "https://example.com/image.jpg",
+                idempotencyKey = "key-123",
+                retryCount = 0
+            )
+
+            whenever(imageTaskRepository.findByTaskIdWithLock(taskId))
+                .thenReturn(Optional.of(task))
+            whenever(imageTaskRepository.save(any<ImageTask>()))
+                .thenAnswer { it.arguments[0] }
+
+            // when
+            val canRetry = imageTaskService.incrementRetryAndCheck(taskId)
+
+            // then
+            assertThat(canRetry).isTrue
+            verify(imageTaskRepository).save(taskCaptor.capture())
+            assertThat(taskCaptor.value.retryCount).isEqualTo(1)
+        }
+
+        @Test
+        @DisplayName("재시도 횟수 초과 시 FAILED로 변경하고 false를 반환한다.")
+        fun shouldUpdateToFailed_when_MaxRetryExceeded() {
+            // given
+            val taskId = "test-task-id"
+            val task = ImageTask(
+                taskId = taskId,
+                imageUrl = "https://example.com/image.jpg",
+                idempotencyKey = "key-123",
+                retryCount = ImageTask.MAX_RETRY_COUNT
+            )
+
+            whenever(imageTaskRepository.findByTaskIdWithLock(taskId))
+                .thenReturn(Optional.of(task))
+            whenever(imageTaskRepository.save(any<ImageTask>()))
+                .thenAnswer { it.arguments[0] }
+
+            // when
+            val canRetry = imageTaskService.incrementRetryAndCheck(taskId)
+
+            // then
+            assertThat(canRetry).isFalse
+            verify(imageTaskRepository, times(2)).save(any())
+        }
+    }
 }
