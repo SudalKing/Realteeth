@@ -10,76 +10,6 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 
-@DisplayName("TaskStatus 테스트")
-class TaskStatusTest {
-
-    @Nested
-    @DisplayName("canTransitionTo")
-    inner class CanTransitionTo {
-
-        @ParameterizedTest(name = "{0} -> {1} 전이가 가능해야한다.")
-        @MethodSource("com.realteeth.assignment.domain.entity.TaskStatusTest#validTransitions")
-        @DisplayName("허용되는 상태 전이")
-        fun shouldAllowValidTransition(from: TaskStatus, to: TaskStatus) {
-            assertThat(from.canTransitionTo(to)).isTrue()
-        }
-
-        @ParameterizedTest(name = "{0} -> {1} 전이는 불가능하다.")
-        @MethodSource("com.realteeth.assignment.domain.entity.TaskStatusTest#invalidTransitions")
-        @DisplayName("허용되지 않는 상태 전이")
-        fun shouldNotAllowInvalidTransitions(from: TaskStatus, to: TaskStatus) {
-            assertThat(from.canTransitionTo(to)).isFalse()
-        }
-
-        @Test
-        @DisplayName("COMPLETED는 최종 상태이므로 어떤 상태로도 전이 불가")
-        fun completedShouldBeFinalState() {
-            TaskStatus.entries.forEach { status ->
-                assertThat(TaskStatus.COMPLETED.canTransitionTo(status)).isFalse()
-            }
-        }
-
-        @Test
-        @DisplayName("FAILED는 최종 상태이므로 어떤 상태로도 전이 불가")
-        fun failedShouldBeFinalState() {
-            TaskStatus.entries.forEach { status ->
-                assertThat(TaskStatus.FAILED.canTransitionTo(status)).isFalse()
-            }
-        }
-    }
-
-    companion object {
-
-        @JvmStatic
-        fun validTransitions(): Stream<Arguments> = Stream.of(
-            Arguments.of(TaskStatus.PENDING, TaskStatus.PROCESSING),
-            Arguments.of(TaskStatus.PENDING, TaskStatus.FAILED),
-            Arguments.of(TaskStatus.PROCESSING, TaskStatus.COMPLETED),
-            Arguments.of(TaskStatus.PROCESSING, TaskStatus.FAILED),
-        )
-
-        @JvmStatic
-        fun invalidTransitions(): Stream<Arguments> = Stream.of(
-            // PENDING -> COMPLETED 직접 전이 불가
-            Arguments.of(TaskStatus.PENDING, TaskStatus.COMPLETED),
-            // 역방향 전이 불가
-            Arguments.of(TaskStatus.PROCESSING, TaskStatus.PENDING),
-            Arguments.of(TaskStatus.COMPLETED, TaskStatus.PROCESSING),
-            Arguments.of(TaskStatus.COMPLETED, TaskStatus.PENDING),
-            Arguments.of(TaskStatus.FAILED, TaskStatus.PENDING),
-            Arguments.of(TaskStatus.FAILED, TaskStatus.PROCESSING),
-            // 완료 상태 전이 불가
-            Arguments.of(TaskStatus.FAILED, TaskStatus.COMPLETED),
-            Arguments.of(TaskStatus.COMPLETED, TaskStatus.FAILED),
-            // 자기 자신으로 전이 불가
-            Arguments.of(TaskStatus.PENDING, TaskStatus.PENDING),
-            Arguments.of(TaskStatus.PROCESSING, TaskStatus.PROCESSING),
-            Arguments.of(TaskStatus.COMPLETED, TaskStatus.COMPLETED),
-            Arguments.of(TaskStatus.FAILED, TaskStatus.FAILED),
-        )
-    }
-}
-
 @DisplayName("ImageTask 테스트")
 class ImageTaskTest {
 
@@ -264,5 +194,75 @@ class ImageTaskTest {
         val task = createProcessingTask()
         task.markAsCompleted("작업 완료")
         return task
+    }
+}
+
+@DisplayName("TaskStatus 테스트")
+class TaskStatusTest {
+
+    @Nested
+    @DisplayName("canTransitionTo")
+    inner class CanTransitionTo {
+
+        @ParameterizedTest(name = "{0} -> {1} 전이가 가능해야한다.")
+        @MethodSource("com.realteeth.assignment.domain.entity.TaskStatusTest#validTransitions")
+        @DisplayName("허용되는 상태 전이")
+        fun shouldAllowValidTransition(from: TaskStatus, to: TaskStatus) {
+            assertThat(from.canTransitionTo(to)).isTrue()
+        }
+
+        @ParameterizedTest(name = "{0} -> {1} 전이는 불가능하다.")
+        @MethodSource("com.realteeth.assignment.domain.entity.TaskStatusTest#invalidTransitions")
+        @DisplayName("허용되지 않는 상태 전이")
+        fun shouldNotAllowInvalidTransitions(from: TaskStatus, to: TaskStatus) {
+            assertThat(from.canTransitionTo(to)).isFalse()
+        }
+
+        @Test
+        @DisplayName("COMPLETED는 최종 상태이므로 어떤 상태로도 전이 불가")
+        fun completedShouldBeFinalState() {
+            TaskStatus.entries.forEach { status ->
+                assertThat(TaskStatus.COMPLETED.canTransitionTo(status)).isFalse()
+            }
+        }
+
+        @Test
+        @DisplayName("FAILED는 최종 상태이므로 어떤 상태로도 전이 불가")
+        fun failedShouldBeFinalState() {
+            TaskStatus.entries.forEach { status ->
+                assertThat(TaskStatus.FAILED.canTransitionTo(status)).isFalse()
+            }
+        }
+    }
+
+    companion object {
+
+        @JvmStatic
+        fun validTransitions(): Stream<Arguments> = Stream.of(
+            Arguments.of(TaskStatus.PENDING, TaskStatus.PROCESSING),
+            Arguments.of(TaskStatus.PENDING, TaskStatus.FAILED),
+            Arguments.of(TaskStatus.PROCESSING, TaskStatus.COMPLETED),
+            Arguments.of(TaskStatus.PROCESSING, TaskStatus.FAILED),
+        )
+
+        @JvmStatic
+        fun invalidTransitions(): Stream<Arguments> = Stream.of(
+            // PENDING -> COMPLETED 직접 전이 불가
+            Arguments.of(TaskStatus.PENDING, TaskStatus.COMPLETED),
+            // 역방향 전이 불가
+            Arguments.of(TaskStatus.PROCESSING, TaskStatus.PENDING),
+            Arguments.of(TaskStatus.COMPLETED, TaskStatus.PROCESSING),
+            Arguments.of(TaskStatus.COMPLETED, TaskStatus.PENDING),
+            Arguments.of(TaskStatus.FAILED, TaskStatus.PENDING),
+            Arguments.of(TaskStatus.FAILED, TaskStatus.PROCESSING),
+            // 완료 상태 전이 불가
+            Arguments.of(TaskStatus.FAILED, TaskStatus.COMPLETED),
+            Arguments.of(TaskStatus.COMPLETED, TaskStatus.FAILED),
+            // 자기 자신으로 전이 불가
+            Arguments.of(TaskStatus.PENDING, TaskStatus.PENDING),
+            Arguments.of(TaskStatus.PROCESSING, TaskStatus.PROCESSING),
+            Arguments.of(TaskStatus.COMPLETED, TaskStatus.COMPLETED),
+            Arguments.of(TaskStatus.FAILED, TaskStatus.FAILED),
+        )
     }
 }
