@@ -65,10 +65,10 @@ class Outbox(
         processedAt = LocalDateTime.now()
     }
 
+    fun canRetry(): Boolean = retryCount < MAX_RETRY_COUNT && status == OutboxStatus.PENDING
+
     fun incrementRetryCount(): Boolean {
         retryCount++
-        return retryCount <= MAX_RETRY_COUNT
+        return canRetry()
     }
-
-    fun canRetry(): Boolean = retryCount < MAX_RETRY_COUNT && status == OutboxStatus.PENDING
 }
