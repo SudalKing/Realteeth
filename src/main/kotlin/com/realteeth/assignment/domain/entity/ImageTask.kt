@@ -75,12 +75,12 @@ class ImageTask(
         this.errorMessage = errorMessage
     }
 
+    fun canRetry(): Boolean = retryCount < MAX_RETRY_COUNT
+
     fun incrementRetryCount(): Boolean {
         retryCount++
         updatedAt = LocalDateTime.now()
 
-        return retryCount <= MAX_RETRY_COUNT
+        return canRetry()
     }
-
-    fun canRetry(): Boolean = retryCount < MAX_RETRY_COUNT
 }
