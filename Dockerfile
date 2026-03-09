@@ -13,10 +13,10 @@ FROM amazoncorretto:17-alpine
 WORKDIR /app
 
 # User
-RUN addgroup -g 1001 appgroup %% \
-    adduser -u 1001 -G addgroup -D appuser
+RUN addgroup -g 1001 appgroup && \
+    adduser -u 1001 -G appgroup -D appuser
 
-COPY --from=build /app/build/libs/*-SNAPSHOT.jar app.jar
+COPY --from=build /app/build/libs/assignment-*.jar app.jar
 
 RUN chown -R appuser:appgroup /app
 USER appuser
