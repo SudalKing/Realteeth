@@ -1,6 +1,8 @@
 package com.realteeth.assignment.domain.entity
 
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 import java.util.*
 
@@ -27,6 +29,8 @@ class ImageTask(
     @Column(nullable = false, unique = true, length = 64)
     val idempotencyKey: String,
 
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, length = 20, columnDefinition = "VARCHAR(20)")
     var status: TaskStatus = TaskStatus.PENDING,
 

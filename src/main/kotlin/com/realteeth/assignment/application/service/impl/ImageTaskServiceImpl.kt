@@ -12,6 +12,7 @@ import com.realteeth.assignment.domain.repository.OutboxRepository
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 
 @Service
@@ -94,7 +95,7 @@ class ImageTaskServiceImpl(
         return TaskListResponse(tasks, tasks.size)
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun updateTaskToProcessing(taskId: String, mockJobId: String) {
         val task = imageTaskRepository.findByTaskIdWithLock(taskId)
             .orElseThrow { TaskNotFoundException("작업을 찾을 수 없습니다: $taskId") }
@@ -108,7 +109,7 @@ class ImageTaskServiceImpl(
         }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun completeTask(taskId: String, result: String) {
         val task = imageTaskRepository.findByTaskIdWithLock(taskId)
             .orElseThrow { TaskNotFoundException("작업을 찾을 수 없습니다: $taskId") }
@@ -122,7 +123,7 @@ class ImageTaskServiceImpl(
         }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun failTask(taskId: String, errorMessage: String) {
         val task = imageTaskRepository.findByTaskIdWithLock(taskId)
             .orElseThrow { TaskNotFoundException("작업을 찾을 수 없습니다: $taskId") }
@@ -137,7 +138,7 @@ class ImageTaskServiceImpl(
         }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     override fun incrementRetryAndCheck(taskId: String): Boolean {
         val task = imageTaskRepository.findByTaskIdWithLock(taskId)
             .orElseThrow { TaskNotFoundException("작업을 찾을 수 없습니다: $taskId") }
