@@ -18,10 +18,6 @@ class ImageTaskControllerImpl(
     private val imageTaskService: ImageTaskService
 ): ImageTaskController {
 
-    /**
-     * [1.1] 이미지 처리 작업 요청
-     * POST /api/v1/tasks
-     */
     @PostMapping
     override fun createTask(@Valid @RequestBody request: CreateTaskRequest): ResponseEntity<CreateTaskResponse> {
         val response = imageTaskService.createImageTask(request)
@@ -30,10 +26,6 @@ class ImageTaskControllerImpl(
             .body(response)
     }
 
-    /**
-     * [1.2] 작업 상태 조회
-     * GET /api/v1/tasks/{taskId}
-     */
     @GetMapping("/{taskId}")
     override fun getTask(@PathVariable taskId: String): ResponseEntity<TaskResponse> {
         val response = imageTaskService.getTask(taskId)
@@ -41,10 +33,6 @@ class ImageTaskControllerImpl(
         return ResponseEntity.ok(response)
     }
 
-    /**
-     * [1.3] 모든 작업 목록 조회
-     * GET /api/v1/tasks
-     */
     @GetMapping
     override fun getAllTasks(@RequestParam(required = false) status: List<TaskStatus>?): ResponseEntity<TaskListResponse> {
         val response = if (status.isNullOrEmpty()) {
