@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.realteeth.assignment.domain.repository.ImageTaskRepository
 import com.realteeth.assignment.domain.repository.OutboxRepository
 import com.realteeth.assignment.infrastructure.client.MockWorkerClient
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -14,8 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
@@ -60,8 +66,30 @@ class ImageTaskControllerIntegrationTest {
         @DisplayName("새로운 작업 요청 시 202 Accepted를 반환한다.")
         fun shouldReturn202Accepted_when_requestIsNew() {
             // given
-            // when
-            // then
+            val request = """
+                {
+                    "imageUrl": "https://example.com/image.jpg",
+                    "idempotencyKey": "test-key"
+                }
+            """.trimIndent()
+
+            // when & then
+            mockMvc.perform(
+                post("/api/v1/tasks")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(request)
+            )
+                .andDo(print())
+                .andExpect(status().isAccepted)
+                .andExpect(jsonPath("$.taskId").exists())
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.message").exists())
+
+            // DB 저장 확인
+            val tasks = imageTaskRepository.findAll()
+            assertThat(tasks).hasSize(1)
+            assertThat(tasks[0].imageUrl).isEqualTo("https://example.com/image.jpg")
+            assertThat(tasks[0].idempotencyKey).isEqualTo("test-key")
         }
 
         @Test
