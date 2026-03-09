@@ -35,8 +35,8 @@ docker-compose -f docker-compose.local.yml up -d
 ./gradlew bootRun --args='--spring.profiles.active=local'
 
 # 3. 종료
-docker-compose -f docker-compose.local.yml down      # 컨테이너만
-docker-compose -f docker-compose.local.yml down -v   # 데이터까지 삭제
+docker-compose -f docker-compose.local.yml down # 컨테이너만
+docker-compose -f docker-compose.local.yml down -v # 데이터까지 삭제
 ```
 
 ### Dev 환경 (Docker 전체 실행)
@@ -49,8 +49,8 @@ docker-compose -f docker-compose.dev.yml up -d --build
 docker-compose -f docker-compose.dev.yml logs -f app
 
 # 3. 종료
-docker-compose -f docker-compose.dev.yml down      # 컨테이너만
-docker-compose -f docker-compose.dev.yml down -v   # 데이터까지 삭제
+docker-compose -f docker-compose.dev.yml down # 컨테이너만
+docker-compose -f docker-compose.dev.yml down -v # 데이터까지 삭제
 ```
 
 ### 접속 정보
