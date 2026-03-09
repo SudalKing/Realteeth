@@ -4,85 +4,87 @@ import com.realteeth.assignment.application.dto.CreateTaskRequest
 import com.realteeth.assignment.application.dto.CreateTaskResponse
 import com.realteeth.assignment.application.dto.TaskListResponse
 import com.realteeth.assignment.application.dto.TaskResponse
-import com.realteeth.assignment.application.service.ImageTaskService
-import com.realteeth.assignment.application.service.impl.ImageTaskServiceImpl.TaskNotFoundException
 import com.realteeth.assignment.domain.entity.TaskStatus
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 
-@RequestMapping("/api/v1/tasks")
-@RestController
-class ImageTaskController(
-    private val imageTaskService: ImageTaskService
-) {
+@Tag(name = "이미지 처리 작업", description = "이미지 처리 작업 API")
+interface ImageTaskController {
 
-    /**
-     * [1.1] 이미지 처리 작업 요청
-     * POST /api/v1/tasks
-     */
-    @PostMapping
-    fun createTask(@Valid @RequestBody request: CreateTaskRequest): ResponseEntity<CreateTaskResponse> {
-        val response = imageTaskService.createImageTask(request)
+    @Operation(
+        summary = "[1.1] 이미지 처리 작업 요청",
+        description = """
+            POST /api/v1/tasks
+            
+            새로운 이미지 처리 작업을 요청한다.
+            - 동일한 idempotencyKey로 중복 요청 시 기존 작업을 반환한다.
+            - 작업은 비동기로 처리되며, 생성 즉시 PENDING 상태를 반환한다.
+        """
+    )
+    @ApiResponses(
+        ApiResponse(
+            responseCode = "202",
+            description = "작업 요청 성공",
+            content = [Content(schema = Schema(implementation = CreateTaskResponse::class))]
+        ),
+        ApiResponse(
+            responseCode = "400",
+            description = "잘못된 요청",
+            content = [Content(schema = Schema(implementation = ErrorResponse::class))]
+        )
+    )
+    fun createTask(@Valid @RequestBody request: CreateTaskRequest): ResponseEntity<CreateTaskResponse>
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED)
-            .body(response)
-    }
+    @Operation(
+        summary = "[1.2] 이미지 작업 상태 조회",
+        description = """
+            GET /api/v1/tasks/{taskId}
+            
+            TaskId로 특정 작업의 상태/결과를 조회한다.
+        """
+    )
+    @ApiResponses(
+        ApiResponse(
+            responseCode = "200",
+            description = "조회 성공",
+            content = [Content(schema = Schema(implementation = TaskResponse::class))]
+        ),
+        ApiResponse(
+            responseCode = "404",
+            description = "작업을 찾을 수 없음",
+            content = [Content(schema = Schema(implementation = ErrorResponse::class))]
+        )
+    )
+    fun getTask(@PathVariable taskId: String): ResponseEntity<TaskResponse>
 
-    /**
-     * [1.2] 작업 상태 조회
-     * GET /api/v1/tasks/{taskId}
-     */
-    @GetMapping("/{taskId}")
-    fun getTask(@PathVariable taskId: String): ResponseEntity<TaskResponse> {
-        val response = imageTaskService.getTask(taskId)
-
-        return ResponseEntity.ok(response)
-    }
-
-    /**
-     * [1.3] 모든 작업 목록 조회
-     * GET /api/v1/tasks
-     */
-    @GetMapping
-    fun getAllTasks(@RequestParam(required = false) status: List<TaskStatus>?): ResponseEntity<TaskListResponse> {
-        val response = if (status.isNullOrEmpty()) {
-            imageTaskService.getAllTasks()
-        } else {
-            imageTaskService.getTasksByStatus(status)
-        }
-
-        return ResponseEntity.ok(response)
-    }
+    @Operation(
+        summary = "[1.3] 모든 이미지 처리 작업 목록 조회",
+        description = """
+            GET /api/v1/tasks/
+            
+            모든 작업 목록을 조회합니다.
+            - 작업의 status로 필터링이 가능하다.
+        """
+    )
+    @ApiResponses(
+        ApiResponse(
+            responseCode = "200",
+            description = "조회 성공",
+            content = [Content(schema = Schema(implementation = TaskListResponse::class))]
+        )
+    )
+    fun getAllTasks(
+        @Parameter()
+        @RequestParam(required = false) status: List<TaskStatus>?
+    ): ResponseEntity<TaskListResponse>
 }
-
-@RestControllerAdvice
-class GlobalExceptionHandler {
-    @ExceptionHandler(TaskNotFoundException::class)
-    fun handleTaskNotFound(e: TaskNotFoundException): ResponseEntity<ErrorResponse> {
-        return ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
-            .body(ErrorResponse("NOT_FOUND", e.message ?: "작업이 없습니다."))
-    }
-
-    @ExceptionHandler(IllegalArgumentException::class)
-    fun handleBadRequest(e: IllegalArgumentException): ResponseEntity<ErrorResponse> {
-        return ResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
-            .body(ErrorResponse("BAD_REQUEST", e.message ?: "잘못된 요청입니다."))
-    }
-
-    @ExceptionHandler(Exception::class)
-    fun handleGenericException(e: Exception): ResponseEntity<ErrorResponse> {
-        return ResponseEntity
-            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(ErrorResponse("INTERNAL_ERROR", "서버 오류가 발생했습니다."))
-    }
-}
-
-
-data class ErrorResponse(
-    val code: String,
-    val message: String
-)
