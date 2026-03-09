@@ -46,7 +46,7 @@ interface ImageTaskController {
     fun createTask(@Valid @RequestBody request: CreateTaskRequest): ResponseEntity<CreateTaskResponse>
 
     @Operation(
-        summary = "[1.2] 이미지 작업 상태 조회",
+        summary = "[1.2] 이미지 처리 작업 상태 조회",
         description = """
             GET /api/v1/tasks/{taskId}
             
