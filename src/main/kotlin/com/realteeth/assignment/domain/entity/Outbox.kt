@@ -1,6 +1,8 @@
 package com.realteeth.assignment.domain.entity
 
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 
 @Entity
@@ -27,6 +29,8 @@ class Outbox(
     @Column(nullable = false, columnDefinition = "JSON")
     val payload: String,
 
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, length = 20, columnDefinition = "VARCHAR(20)")
     var status: OutboxStatus = OutboxStatus.PENDING,
 

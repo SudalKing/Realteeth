@@ -18,7 +18,7 @@ class JobStatusPoller(
     /**
      * PROCESSING 상태의 모든 작업 폴링
      */
-    @Transactional(readOnly = true)
+    @Transactional
     fun pollAllProcessingJobs() {
         val processingTasks = imageTaskRepository.findAllByStatusIn(listOf(TaskStatus.PROCESSING))
         log.debug("[ImageTask] behavior: 처리 중인 작업 조회 | SUCCESS | message: 처리 중인 작업 ${processingTasks.size}건")
