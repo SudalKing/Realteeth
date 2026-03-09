@@ -1,0 +1,28 @@
+# =============================================
+# Local 프로필: Local 환경의 IDE 또는 CLI에서 실행
+# MySQL: docker-compose.local.yml로 띄운 mysql-local 컨테이너
+# =============================================
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/image_processor?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 5
+      connection-timeout: 10000
+
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    root: INFO
+    com.realteeth.imageprocessor: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

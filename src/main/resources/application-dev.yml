@@ -1,0 +1,27 @@
+# =============================================
+# Dev 프로필: Docker 컨테이너로 실행
+# MySQL: docker-compose.Dev.yml로 띄운 mysql-dev 컨테이너
+# =============================================
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:mysql://mysql-dev:3306/image_processor?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 5
+      connection-timeout: 10000
+
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    root: INFO
+    com.realteeth.imageprocessor: INFO
+    org.hibernate.SQL: WARN

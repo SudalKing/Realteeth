@@ -1,30 +1,23 @@
 spring:
   application:
     name: assignment
-  datasource:
-    url:
-    username: sa
-    password:
-    driver-class-name: com.mysql.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+        type:
+          preferred_enum_jdbc_type: VARCHAR
   jackson:
-    property-naming-strategy: SNAKE_CASE
     serialization:
       write-dates-as-timestamps: false
 
 server:
   port: 8080
-
-mock-worker:
-  base-url: https://dev.realteeth.ai/mock
-  api-key: mock_b64d77a3625b4dd099387479769f557e
 
 logging:
   level:
@@ -33,18 +26,18 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
 
----
-# Local
-spring:
-  config:
-    activate:
-      on-profile: local
+# Swagger 설정
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /api-docs
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
 
-  datasource:
-    url: jdbc:mysql://localhost:3306/image_processor?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 5
-      minimum-idle: 2
+# Mock Worker 설정
+mock-worker:
+  base-url: https://dev.realteeth.ai/mock
+  api-key: mock_b64d77a3625b4dd099387479769f557e
