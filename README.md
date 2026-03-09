@@ -63,77 +63,6 @@ docker-compose -f docker-compose.dev.yml down -v # 데이터까지 삭제
 
 ---
 
-## API 명세
-
-### 1. 이미지 처리 작업 요청
-
-```bash
-POST /api/v1/tasks
-Content-Type: application/json
-
-{
-  "image_url": "https://example.com/image.jpg",
-  "idempotency_key": "unique-request-id-123"
-}
-```
-
-**Response (202 Accepted)**
-```json
-{
-  "task_id": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "PENDING",
-  "message": "작업이 생성되었습니다."
-}
-```
-
-**cURL 예시**
-```bash
-curl -X POST http://localhost:8080/api/v1/tasks \
-  -H "Content-Type: application/json" \
-  -d '{
-    "image_url": "https://example.com/image.jpg",
-    "idempotency_key": "test-001"
-  }'
-```
-
-### 2. 작업 상태 조회
-
-```bash
-GET /api/v1/tasks/{taskId}
-```
-
-**Response**
-```json
-{
-  "task_id": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "COMPLETED",
-  "result": "Image processed successfully",
-  "error_message": null,
-  "created_at": "2024-01-01T10:00:00",
-  "updated_at": "2024-01-01T10:00:30"
-}
-```
-
-### 3. 작업 목록 조회
-
-```bash
-# 전체 목록
-GET /api/v1/tasks
-
-# 상태별 필터링
-GET /api/v1/tasks?status=PENDING,PROCESSING
-```
-
-**Response**
-```json
-{
-  "tasks": [...],
-  "total_count": 10
-}
-```
-
----
-
 ## 테스트
 
 ### 테스트 실행 & Jacoco 커버리지 보고서
@@ -154,7 +83,7 @@ start build/reports/jacoco/test/html/index.html
 
 ### [4.1] 중복 요청 처리
 
-**멱등성 보장**
+#### **멱등성 보장**
 
 1. **Pessimistic Lock 사용**
    ```kotlin
@@ -176,13 +105,13 @@ start build/reports/jacoco/test/html/index.html
    - DB 레벨에서 중복 삽입 방지
    - 동시에 같은 키로 요청해도 하나만 성공
 
-**처리 방식**
+#### **처리 방식**
 1. `idempotency_key`에 UNIQUE 제약 조건 설정
 2. 요청 수신 시 기존 키 존재 여부 확인
 3. 존재하면 기존 작업 반환
 4. 존재하지 않으면 새 작업 요청
 
-**설계 의도**
+#### **설계 의도**
 - 클라이언트가 요청 시 동일한 키를 전송하면 중복 처리 방지
 - 네트워크 타임아웃 등으로 응답을 못 받은 경우에도 안전
 
