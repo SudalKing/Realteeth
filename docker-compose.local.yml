@@ -1,22 +1,36 @@
+# ===========================================
+# Local 프로필: MySQL만 Docker로 실행
+# Application은 IDE 또는 CLI에서 실행
+# ===========================================
+# 명령어: docker-compose -f docker-compose.local.yml up -d
+
 services:
-  mysql:
+  mysql-local:
     image: mysql:8.0
-    container_name: image-processor-mysql-dev
+    container_name: image-processor-mysql-local
     environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=image_processor
-      - TZ=Asia/Seoul
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: image_processor
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+      LANG: C.UTF-8
+      TZ: Asia/Seoul
     ports:
       - "3306:3306"
     volumes:
-      - mysql-dev-data:/var/lib/mysql
+      - mysql-local-data:/var/lib/mysql
       - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    command:
+      - --character-set-server=utf8mb4
+      - --init-connect=SET NAMES utf8mb4
+      - --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+    restart: unless-stopped
 
 volumes:
-  mysql-dev-data:
+  mysql-local-data:
+    name: image-processor-mysql-local-data

@@ -1,0 +1,61 @@
+# ===========================================
+# Dev 프로필: Application + MySQL 모두 Docker로 실행
+# ===========================================
+# 명령어:
+#   docker-compose -f docker-compose.dev.yml up -d --build
+#   docker-compose -f docker-compose.dev.yml down -v
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: image-processor-app-dev
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      MOCK_WORKER_API_KEY: mock_b64d77a3625b4dd099387479769f557e
+      TZ: Asia/Seoul
+    depends_on:
+      mysql-dev:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  mysql-dev:
+    image: mysql:8.0
+    container_name: image-processor-mysql-dev
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: image_processor
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-dev-data:/var/lib/mysql
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --init-connect=SET NAMES utf8mb4
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - app-network
+
+volumes:
+  mysql-dev-data:
+    name: image-processor-mysql-dev-data
+
+networks:
+  app-network:
+    driver: bridge
