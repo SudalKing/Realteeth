@@ -70,7 +70,7 @@ interface ImageTaskController {
     @Operation(
         summary = "[1.3] 모든 이미지 처리 작업 목록 조회",
         description = """
-            GET /api/v1/tasks/
+            GET /api/v1/tasks
             
             모든 작업 목록을 조회합니다.
             - 작업의 status로 필터링이 가능하다.
