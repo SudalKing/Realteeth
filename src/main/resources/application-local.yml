@@ -23,6 +23,6 @@ spring:
 logging:
   level:
     root: INFO
-    com.realteeth.imageprocessor: DEBUG
+    com.sudal.imageprocessor: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE

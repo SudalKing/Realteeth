@@ -23,5 +23,5 @@ spring:
 logging:
   level:
     root: INFO
-    com.realteeth.imageprocessor: INFO
+    com.sudal.imageprocessor: INFO
     org.hibernate.SQL: WARN

@@ -22,7 +22,7 @@ server:
 logging:
   level:
     root: info
-    com.realteeth.assignment: DEBUG
+    com.sudal.imageprocessor: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
 
@@ -39,5 +39,5 @@ springdoc:
 
 # Mock Worker 설정
 mock-worker:
-  base-url: https://dev.realteeth.ai/mock
+  base-url: https://dev.mock.ai/mock
   api-key: mock_b64d77a3625b4dd099387479769f557e

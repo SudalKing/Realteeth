@@ -1,0 +1,78 @@
+package com.sudal.imageprocessor.domain.entity
+
+import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
+import java.time.LocalDateTime
+
+@Entity
+@Table(
+    name = "outbox",
+    indexes = [
+        Index(name = "idx_outbox_status", columnList = "status"),
+        Index(name = "idx_outbox_created_at", columnList = "createdAt"),
+    ])
+class Outbox(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long = 0,
+
+    @Column(nullable = false, length = 50)
+    val aggregateType: String,
+
+    @Column(nullable = false, length = 36)
+    val aggregateId: String,
+
+    @Column(nullable = false, length = 50)
+    val eventType: String,
+
+    @Column(nullable = false, columnDefinition = "JSON")
+    val payload: String,
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 20, columnDefinition = "VARCHAR(20)")
+    var status: OutboxStatus = OutboxStatus.PENDING,
+
+    @Column(nullable = false)
+    var retryCount: Int = 0,
+
+    @Column(nullable = false, updatable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+
+    @Column
+    var processedAt: LocalDateTime? = null,
+) {
+    companion object {
+        const val MAX_RETRY_COUNT = 5
+        const val RETRY_INTERVAL_SECOND = 30L
+
+        fun createTaskCreatedEvent(taskId: String,
+                                   payload: String
+        ): Outbox {
+            return Outbox(
+                aggregateType = "ImageTask",
+                aggregateId = taskId,
+                eventType = "TASK_CREATED",
+                payload = payload,
+            )
+        }
+    }
+
+    fun markAsProcessed() {
+        status = OutboxStatus.PROCESSED
+        processedAt = LocalDateTime.now()
+    }
+
+    fun markAsFailed() {
+        status = OutboxStatus.FAILED
+        processedAt = LocalDateTime.now()
+    }
+
+    fun canRetry(): Boolean = retryCount < MAX_RETRY_COUNT && status == OutboxStatus.PENDING
+
+    fun incrementRetryCount(): Boolean {
+        retryCount++
+        return canRetry()
+    }
+}

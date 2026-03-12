@@ -1,1 +1,1 @@
-rootProject.name = "assignment"
+rootProject.name = "image-processor"

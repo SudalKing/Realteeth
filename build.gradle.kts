@@ -8,9 +8,9 @@ plugins {
     id("jacoco")
 }
 
-group = "com.realteeth"
+group = "com.sudal"
 version = "1.0.0"
-description = "assignment"
+description = "image-processor"
 
 java {
     toolchain {
